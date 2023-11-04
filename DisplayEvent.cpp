@@ -63,21 +63,24 @@ void handle4OUT(int num)
 
 void UpstreamMachine::EventMachineInit(void){
     std::cout << "EventMachineInit" << std::endl;
-    registEvent(1,1,handle1,handle1ACK,handle1OUT);
-    registEvent(2,1,handle2,handle2ACK,handle2OUT); 
-    registEvent(3,1,handle3,handle3ACK,handle3OUT);
-    registEvent(4,1,handle4,handle4ACK,handle4OUT); 
+    registEvent(1,3,handle1,handle1ACK,handle1OUT);
+    registEvent(2,4,handle2,handle2ACK,handle2OUT); 
+    registEvent(3,2,handle3,handle3ACK,handle3OUT);
+    registEvent(4,2,handle4,handle4ACK,handle4OUT); 
+    trggerEvent(1);
     trggerEvent(2);
     trggerEvent(3);
-    trggerEvent(1);
-    
+    trggerEvent(2);
+    trggerEvent(2);
+    // trggerEvent(4);
     DebugPrint(EventList);
+    DebugPrintTri(eventTrgList);
 }
 
 
 void UpstreamMachine::EventProcess(void)
 {
-    // 检查队列是否为空
+    // 检查事件队列是否为空, 非空就按顺序执行队列中的任务
     if (!eventTrgList.empty()) {
         std::cout << "trigEventId " << eventTrgList.front() << std::endl;
         int trigEventId = eventTrgList.front();
@@ -89,7 +92,7 @@ void UpstreamMachine::EventProcess(void)
                 break;
             }
         }
-
     } 
-    
+    DebugPrintTri(eventTrgList);
 }
+
