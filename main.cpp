@@ -18,7 +18,7 @@ void test() {
     while (true)
     {
         std::cout << "\ntest" << std::endl;
-        std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+        std::this_thread::sleep_for(std::chrono::milliseconds(20000));
         handle1ACK(1);
         std::this_thread::sleep_for(std::chrono::milliseconds(2000));
         handle2ACK(2);

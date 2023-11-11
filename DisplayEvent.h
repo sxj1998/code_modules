@@ -8,6 +8,9 @@
 #include <algorithm> 
 #include <functional>
 
+
+#define OUTTIME_SETTINGS  3
+
 /*执行事件函数*/
 typedef void (*EventHandleCall)(int); 
 
@@ -22,6 +25,8 @@ typedef struct{
     EventHandleCall EventHandle;
     EventAckCall EventAck;
     EventOutTimeCall EventOutTime;
+    int eventOutTimeCnt;
+    int eventOutTimeSet;
 }Event_t;
 
 
@@ -40,9 +45,9 @@ public:
         std::cout << "~UpstreamMachine" << std::endl;
     }
 
-    void registEvent(int id, int priority,EventHandleCall EventHandle, EventAckCall EventAck,EventOutTimeCall EventOutTime)
+    void registEvent(int id, int priority,EventHandleCall EventHandle, EventAckCall EventAck,EventOutTimeCall EventOutTime,int eventOutTimeSet)
     {
-        Event_t event = {id, priority,EventHandle,EventAck,EventOutTime};
+        Event_t event = {id, priority,EventHandle,EventAck,EventOutTime,0,eventOutTimeSet};
         EventList.push_back(event);
     }
 
@@ -51,45 +56,48 @@ public:
         eventTrgList.remove(id);
     }
 
+    void addOutTimeEvent(int id)
+    {
+        eventOUTList.push_back(id);
+    }
+
+    void delOutTimeEvent(int id)
+    {
+        eventOUTList.remove(id);
+    }
+
+    void addTrigEvent(int id)
+    {
+        eventTrgList.push_back(id);
+    }
+
+    void removeTrigEvent(int id)
+    {
+        eventTrgList.remove(id);
+    }
+
+
+
 
     /*根据链表中的优先级 将TRIGER 链表中执行id进行排序*/
     bool comparePriority(const int& id1, const int& id2) {
 
-    auto event1 = std::find_if(EventList.begin(), EventList.end(), [id1](const Event_t& event) {
-        return event.id == id1;
-    });
+        auto event1 = std::find_if(EventList.begin(), EventList.end(), [id1](const Event_t& event) {
+            return event.id == id1;
+        });
 
-    auto event2 = std::find_if(EventList.begin(), EventList.end(), [id2](const Event_t& event) {
-        return event.id == id2;
-    });
+        auto event2 = std::find_if(EventList.begin(), EventList.end(), [id2](const Event_t& event) {
+            return event.id == id2;
+        });
 
-    if (event1 != EventList.end() && event2 != EventList.end()) {
-        return event1->priority < event2->priority;
+        if (event1 != EventList.end() && event2 != EventList.end()) {
+            return event1->priority < event2->priority;
+        }
+        return false; 
     }
-    return false; 
-}
 
   
-
-    void trggerEvent(int id)
-    {
-        std::unique_lock<std::mutex> lock(eventMutex);
-
-        auto it = std::find(eventTrgList.begin(), eventTrgList.end(), id);
-        if (it != eventTrgList.end()) {
-            std::cout << "EVENT HAS PUSHED" << std::endl;
-        } else {
-            for (const Event_t& event : EventList) {
-                if (id == event.id) {
-                    eventTrgList.push_back(id);
-                    break;
-                }
-            }
-            eventTrgList.sort(std::bind(&UpstreamMachine::comparePriority, this, std::placeholders::_1, std::placeholders::_2));
-        }
-
-
-    }
+    void trggerEvent(int id);
 
     void EventProcess(void);
 
@@ -98,6 +106,7 @@ public:
 private:
     std::thread eventThread;
     std::list<int> eventTrgList;
+    std::list<int> eventOUTList;
     std::mutex eventMutex;
     std::list<Event_t> EventList;
     const int OUT_TIME = 1000;
@@ -117,6 +126,13 @@ private:
         }
     }
 
+    void DebugPrintOut(const std::list<int>& eventOUTList) {
+        std::cout << "DebugPrintOut LIST -------------" << std::endl;
+        for (const int& id : eventOUTList) {
+            // 在这里，您只有事件的 id，无法访问 Event_t 结构体的其他属性
+            std::cout << "Event ID: " << id << std::endl;
+        }
+    }
 };
 
 
